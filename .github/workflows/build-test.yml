@@ -1,0 +1,24 @@
+name: Unit test
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "dev/**"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@master
+      - name: install java
+        uses: actions/setup-java@v2
+        with:
+          distribution: "adopt"
+          java-version: "11"
+      - name: setup gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: unit test
+        run: |
+          # 单元测试
+          gradle test

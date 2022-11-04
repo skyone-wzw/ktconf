@@ -1,0 +1,31 @@
+name: Publish
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Install java
+        uses: actions/setup-java@v2
+        with:
+          distribution: "adopt"
+          java-version: "11"
+      - name: Setup gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Unit test
+        run: |
+          # 单元测试
+          gradle test
+      - name: Publish package
+        env:
+          USERNAME: ${{ github.actor }}
+          TOKEN: ${{ github.token }}
+        run: |
+          # 发布
+          gradle publish

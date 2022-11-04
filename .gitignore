@@ -1,0 +1,8 @@
+.idea
+.gradle
+/conf
+/cache
+/data
+**/build/
+!src/**/build/
+/device.json
