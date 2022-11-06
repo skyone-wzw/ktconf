@@ -7,16 +7,12 @@ import java.io.File
 import java.util.*
 import kotlin.system.exitProcess
 
-class ConfigureLoader(private val baseDir: String) {
+class ConfigureLoader(val baseDir: String, frequency: Long = 60_000L, init: ConfigureLoader.() -> Unit = {}) {
     private val configDir = File(baseDir)
     private val configs = HashMap<String, Configure<*>>()
     private val timer = Timer()
 
-    constructor(
-        baseDir: String,
-        frequency: Long = 60_000L,
-        init: ConfigureLoader.() -> Unit
-    ) : this(baseDir) {
+    init {
         if (!configDir.exists()) {
             ConfigureManager.logger.warn("`${baseDir}` does not exist, creating")
             configDir.mkdir()
