@@ -22,8 +22,8 @@ allprojects {
 }
 
 dependencies {
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}")
-    api("org.slf4j:slf4j-log4j12:${Versions.slf4j}")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}")
+    compileOnly("org.slf4j:slf4j-log4j12:${Versions.slf4j}")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Versions.serialization}")
