@@ -5,6 +5,7 @@ plugins {
     `maven-publish`
     kotlin("jvm") version Versions.kotlin
     kotlin("plugin.serialization") version Versions.kotlin
+    id("org.jetbrains.dokka") version Versions.kotlin
 }
 
 group = "host.skyone"
@@ -12,10 +13,10 @@ version = "1.0.0"
 
 allprojects {
     repositories {
-        if (System.getenv("GRADLE_CHINA_MIRROR") == "true") {
-            logger.log(LogLevel.INFO, "Build in Local, use mirror")
-            maven(url = "https://maven.aliyun.com/repository/public/")
-        }
+//        if (System.getenv("GRADLE_CHINA_MIRROR") == "true") {
+//            logger.log(LogLevel.INFO, "Build in Local, use mirror")
+//            maven(url = "https://maven.aliyun.com/repository/public/")
+//        }
         mavenCentral()
         mavenLocal()
     }
@@ -39,15 +40,28 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+tasks.jar {
+    makeManifast()
+}
+
 tasks.create<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
+    makeManifast()
 }
 
-tasks.create<Jar>("javadocJar") {
-    dependsOn.add(tasks.getByName("javadoc"))
+val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
-    from(tasks.getByName("javadoc"))
+    makeManifast()
+}
+
+val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
+    dependsOn(tasks.dokkaHtml)
+    from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+    archiveClassifier.set("html-doc")
+    makeManifast()
 }
 
 publishing {
@@ -65,7 +79,8 @@ publishing {
         register<MavenPublication>("gpr") {
             from(components["java"])
             artifact(tasks.getByName("sourcesJar"))
-            artifact(tasks.getByName("javadocJar"))
+            artifact(dokkaJavadocJar)
+            artifact(dokkaHtmlJar)
 
             groupId = project.group as String
             artifactId = project.name

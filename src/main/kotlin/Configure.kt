@@ -6,7 +6,9 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 /**
- * 配置文件对象. 包含配置文件的 名称, 位置, [ConfigureSerializer]. 由 [ConfigureLoader] 构造.
+ * 配置文件对象. 一个 [Configure] 代表一个配置文件.
+ *
+ * 包含配置文件的 名称, 位置, [ConfigureSerializer]. 由 [ConfigureLoader] 构造.
  *
  * 首次加载时使用 [ConfigureLoader.load] 获得. 例如
  *
@@ -29,10 +31,7 @@ import kotlin.coroutines.EmptyCoroutineContext
  * @property [cache] 缓存的配置
  * @property [current] 立即从文件获取配置
  *
- * @see [cache]
- * @see [current]
- * @see [update]
- * @see [check]
+ * @see [ConfigureLoader]
  */
 class Configure<T>(
     val name: String,
