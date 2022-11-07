@@ -9,14 +9,14 @@ plugins {
 }
 
 group = "host.skyone"
-version = "1.0.0"
+version = "1.1.0"
 
 allprojects {
     repositories {
-//        if (System.getenv("GRADLE_CHINA_MIRROR") == "true") {
-//            logger.log(LogLevel.INFO, "Build in Local, use mirror")
-//            maven(url = "https://maven.aliyun.com/repository/public/")
-//        }
+        if (System.getenv("GRADLE_CHINA_MIRROR") == "true") {
+            logger.log(LogLevel.INFO, "Build in Local, use mirror")
+            maven(url = "https://maven.aliyun.com/repository/public/")
+        }
         mavenCentral()
         mavenLocal()
     }
