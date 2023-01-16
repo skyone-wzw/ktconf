@@ -33,49 +33,55 @@ class CommonTest {
     @Test
     fun loadNewFile(): Unit = runBlocking {
         val tempDir = "CommonTest-loadNewFile"
-        val testDataLoader = ConfigureLoader(tempDir) {
-            loadSync("data", TestDataSerializer)
-        }
-        val dataProvider = testDataLoader.get<List<TestData>>("data")
-        assertEquals(
-            dataProvider.current.await(),
-            listOf(
-                TestData(0, "aaa"),
-                TestData(1, "bbb")
+        try {
+            val testDataLoader = ConfigureLoader(tempDir) {
+                loadSync("data", TestDataSerializer)
+            }
+            val dataProvider = testDataLoader.load("data", TestDataSerializer).await()
+            assertEquals(
+                dataProvider.current.await(),
+                listOf(
+                    TestData(0, "aaa"),
+                    TestData(1, "bbb")
+                )
             )
-        )
-        File(tempDir).run {
-            listFiles()?.forEach { it.delete() }
-            delete()
+        } finally {
+            File(tempDir).run {
+                listFiles()?.forEach { it.delete() }
+                delete()
+            }
         }
     }
 
     @Test
     fun updateFromFile(): Unit = runBlocking {
         val tempDir = "CommonTest-updateFromFile"
-        val testDataLoader = ConfigureLoader(tempDir) {
-            loadSync("data", TestDataSerializer)
-        }
-        val dataProvider = testDataLoader.get<List<TestData>>("data")
-        File("$tempDir/data.json").writeText(
-            """
-                [
-                   {
-                      "id": 0,
-                      "name": "test"
-                   }
-                ]
-            """.trimIndent()
-        )
-        assertEquals(
-            dataProvider.current.await(),
-            listOf(
-                TestData(0, "test")
+        try {
+            val testDataLoader = ConfigureLoader(tempDir) {
+                loadSync("data", TestDataSerializer)
+            }
+            val dataProvider = testDataLoader.get<List<TestData>>("data")
+            File("$tempDir/data.json").writeText(
+                """
+                    [
+                       {
+                          "id": 0,
+                          "name": "test"
+                       }
+                    ]
+                """.trimIndent()
             )
-        )
-        File(tempDir).run {
-            listFiles()?.forEach { it.delete() }
-            delete()
+            assertEquals(
+                dataProvider.current.await(),
+                listOf(
+                    TestData(0, "test")
+                )
+            )
+        } finally {
+            File(tempDir).run {
+                listFiles()?.forEach { it.delete() }
+                delete()
+            }
         }
     }
 }

@@ -9,14 +9,10 @@ plugins {
 }
 
 group = "host.skyone"
-version = "1.1.0"
+version = "1.2.0"
 
 allprojects {
     repositories {
-        if (System.getenv("GRADLE_CHINA_MIRROR") == "true") {
-            logger.log(LogLevel.INFO, "Build in Local, use mirror")
-            maven(url = "https://maven.aliyun.com/repository/public/")
-        }
         mavenCentral()
         mavenLocal()
     }
@@ -76,7 +72,7 @@ publishing {
         }
     }
     publications {
-        register<MavenPublication>("gpr") {
+        register<MavenPublication>("ConfigureManager") {
             from(components["java"])
             artifact(tasks.getByName("sourcesJar"))
             artifact(dokkaJavadocJar)

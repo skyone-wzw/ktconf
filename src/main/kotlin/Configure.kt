@@ -25,7 +25,7 @@ import kotlin.coroutines.EmptyCoroutineContext
  * ```
  *
  * @param [name] 配置名称
- * @param [file] 文件的绝对位置
+ * @param [file] 文件对象
  * @param [serializer] 此配置对应的序列化类
  *
  * @property [cache] 缓存的配置
@@ -33,9 +33,9 @@ import kotlin.coroutines.EmptyCoroutineContext
  *
  * @see [ConfigureLoader]
  */
-class Configure<T>(
+class Configure<T : Any>(
     val name: String,
-    private val file: String,
+    private val file: File,
     private val serializer: ConfigureSerializer<T>,
     override val coroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : CoroutineScope {
@@ -67,17 +67,15 @@ class Configure<T>(
      * @see [update]
      */
     fun updateSync(new: T? = null): T {
-        val file = File(file)
         return if (new == null) {
-            ConfigureManager.logger.debug("Load data from `$file`")
+            ConfigureManager.logger.debug("Load data from `${file.relativeTo(File("."))}`")
             val input = file.inputStream()
             serializer.decode(input).also {
                 cache = it
                 input.close()
             }
         } else {
-            ConfigureManager.logger.debug("Save data to `$file`")
-            file.delete()
+            ConfigureManager.logger.debug("Save data to `${file.absolutePath}`")
             val output = file.outputStream()
             serializer.encode(new).also { it.transferTo(output) }
             output.close()

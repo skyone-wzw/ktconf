@@ -33,8 +33,8 @@ class ConfigureLoader(
     override val coroutineContext: CoroutineContext = EmptyCoroutineContext,
     init: ConfigureLoader.() -> Unit = {}
 ) : CoroutineScope {
-    private val configDir = File(baseDir)
-    private val configs = HashMap<String, Configure<*>>()
+    val configDir = File(baseDir)
+    val configs = HashMap<String, Configure<*>>()
     private val timer = Timer()
 
     init {
@@ -74,13 +74,23 @@ class ConfigureLoader(
      * @see [ConfigureLoader.load]
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> loadSync(name: String, serializer: ConfigureSerializer<T>): Configure<T> {
-        if (configs[name] != null) {
-            return configs[name] as Configure<T>
+    inline fun <reified T : Any> loadSync(name: String, serializer: ConfigureSerializer<T>): Configure<T> {
+        configs[name]?.let {
+            if (it.cache.javaClass.isInstance(T::class.java)) return it as Configure<T>
         }
+        return internalLoad(name, serializer)
+    }
+
+    /**
+     * DO NOT CALL THIS INTERNAL FUNCTION UNLESS YUO KNOW WHAT YOU ARE DOING!
+     *
+     * @see [loadSync]
+     * @see [load]
+     */
+    fun <T : Any> internalLoad(name: String, serializer: ConfigureSerializer<T>): Configure<T> {
         val configFile = File(configDir, "$name.${serializer.type}")
         if (!configFile.exists()) {
-            ConfigureManager.logger.warn("`${baseDir}/$name` does not exist, creating")
+            ConfigureManager.logger.warn("`${baseDir}/$name.${serializer.type}` does not exist, creating")
             configFile.createNewFile()
             configFile.outputStream().also {
                 serializer.encode(serializer.default.value).transferTo(it)
@@ -94,7 +104,7 @@ class ConfigureLoader(
             ConfigureManager.logger.error("No read and write permissions for the `${baseDir}/$name` directory")
             exitProcess(-1)
         }
-        return Configure(name, configFile.absolutePath, serializer).also {
+        return Configure(name, configFile, serializer).also {
             configs[name] = it
         }
     }
@@ -115,7 +125,7 @@ class ConfigureLoader(
      * @see [Configure]
      * @see [ConfigureLoader.loadSync]
      */
-    suspend fun <T> load(
+    suspend inline fun <reified T : Any> load(
         name: String,
         serializer: ConfigureSerializer<T>
     ): Deferred<Configure<T>> = withContext(Dispatchers.IO) { async { loadSync(name, serializer) } }
@@ -125,14 +135,16 @@ class ConfigureLoader(
      *
      * @param [name] 文件名称
      *
-     * @throws [ClassCastException] 不会做类型检查, 需要自行保证 [T] 与第一次 [load] 相同
+     * @throws [ClassCastException] [T] 与第一次 [load] 不相同
      * @throws [ConfigureNotLoadedException] 配置文件还未被 [load]
      *
      * @return [Configure] 配置文件对象
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun <T> get(name: String): Configure<T> {
+    inline operator fun <reified T : Any> get(name: String): Configure<T> {
         val config = configs[name] ?: throw ConfigureNotLoadedException("$configDir/$name not loaded")
+        if (config.cache.javaClass.isInstance(T::class.java))
+            throw ClassCastException("config[\"${name}\"] type mismatch: ${config.cache::class.simpleName} to ${T::class.simpleName}")
         return config as Configure<T>
     }
 
